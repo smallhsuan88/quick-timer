@@ -1,1 +1,167 @@
-<!DOCTYPE html><html><head><meta charset="utf-8"><link rel="stylesheet" type="text/css" href="bootstrap3.min.css"><link rel="stylesheet" type="text/css" href="index.css"><script type="text/javascript" src="jquery-1.10.2.min.js"></script><script type="text/javascript" src="bootstrap3.min.js"></script><script type="text/javascript" src="index.js"></script></head><body><div id="timer">????</div><a class="btn btn-info fbtn" id="min60" onclick="adjust(-60)">-60</a><a class="btn btn-info fbtn" id="min10" onclick="adjust(-10)">-10</a><a class="btn btn-primary" id="toggle" onclick="toggle()">RUN</a><a class="btn btn-warning" id="reset" onclick="reset()">RESET</a><a class="btn btn-default" id="hide" onclick="show()">&#xd60;</a><a class="btn btn-info fbtn" id="add10" onclick="adjust(10)">+10</a><a class="btn btn-info fbtn" id="add60" onclick="adjust(60)">+60</a><a class="btn btn-success fbtn" id="def10" onclick="adjust(0,10)">10 sec</a><a class="btn btn-success fbtn" id="def30" onclick="adjust(0,30)">30 sec</a><a class="btn btn-success fbtn" id="def60" onclick="adjust(0,60)">1 min</a><a class="btn btn-success fbtn" id="def180" onclick="adjust(0,180)">3 min</a><a class="btn btn-success fbtn" id="def300" onclick="adjust(0,300)">5 min</a><a class="btn btn-success fbtn" id="def600" onclick="adjust(0,600)">10 min</a><a class="btn btn-success fbtn" id="def900" onclick="adjust(0,900)">15 min</a><a class="btn btn-success fbtn" id="def1800" onclick="adjust(0,1800)">30 min</a></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>快速計時器</title>
+  <link rel="stylesheet" href="bootstrap3.min.css">
+  <link rel="stylesheet" href="index.css">
+  <script src="jquery-1.10.2.min.js"></script>
+  <script src="bootstrap3.min.js"></script>
+</head>
+<body class="bg-dark text-light">
+  <div class="container-fluid py-3">
+    <header class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-2 mb-3">
+      <div>
+        <h1 class="h3 mb-1">快速計時器</h1>
+        <p class="text-muted small mb-0">單段計時與多段流程計時</p>
+      </div>
+      <div class="btn-group mode-switch" role="group" aria-label="Timer mode">
+        <button type="button" class="btn btn-outline-light active" data-mode="single">單段模式</button>
+        <button type="button" class="btn btn-outline-light" data-mode="sequence">流程模式</button>
+      </div>
+    </header>
+
+    <section id="single-panel" class="mode-panel">
+      <div class="card bg-secondary text-light shadow-sm mb-3">
+        <div class="card-body text-center">
+          <div class="display-time" id="single-display">00:00</div>
+          <div class="small text-muted mb-3" id="single-status">待機中</div>
+          <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
+            <button class="btn btn-success" id="single-start">開始</button>
+            <button class="btn btn-warning" id="single-pause">暫停</button>
+            <button class="btn btn-info" id="single-resume">續跑</button>
+            <button class="btn btn-secondary" id="single-reset">重設</button>
+          </div>
+          <div class="text-muted small mb-2">快速調整</div>
+          <div class="d-flex flex-wrap justify-content-center gap-2" id="single-adjustments">
+            <button class="btn btn-outline-light btn-sm" data-delta="-60">-60s</button>
+            <button class="btn btn-outline-light btn-sm" data-delta="-10">-10s</button>
+            <button class="btn btn-outline-light btn-sm" data-delta="10">+10s</button>
+            <button class="btn btn-outline-light btn-sm" data-delta="60">+60s</button>
+            <button class="btn btn-outline-success btn-sm" data-set="10">10 秒</button>
+            <button class="btn btn-outline-success btn-sm" data-set="30">30 秒</button>
+            <button class="btn btn-outline-success btn-sm" data-set="60">1 分</button>
+            <button class="btn btn-outline-success btn-sm" data-set="180">3 分</button>
+            <button class="btn btn-outline-success btn-sm" data-set="300">5 分</button>
+            <button class="btn btn-outline-success btn-sm" data-set="600">10 分</button>
+            <button class="btn btn-outline-success btn-sm" data-set="900">15 分</button>
+            <button class="btn btn-outline-success btn-sm" data-set="1800">30 分</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="sequence-panel" class="mode-panel d-none">
+      <div class="row gy-3">
+        <div class="col-lg-7">
+          <div class="card bg-secondary text-light shadow-sm h-100" id="sequence-editor">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                <div class="text-muted small">流程</div>
+                <div class="h4 mb-0" id="sequence-name">未命名流程</div>
+              </div>
+              <span class="badge bg-info text-dark" id="sequence-mode-label">執行中</span>
+            </div>
+
+            <div class="display-time mb-2" id="sequence-display">00:00</div>
+            <div class="h5 mb-3" id="sequence-step-label">步驟 1</div>
+            <div class="d-flex flex-wrap gap-3 small mb-3">
+              <div><strong>步驟：</strong> <span id="sequence-step-progress">1 / 1</span></div>
+              <div><strong>循環：</strong> <span id="sequence-cycle-progress">1 / 1</span></div>
+            </div>
+
+            <div class="alert alert-success py-2 d-none" id="sequence-complete">
+              <strong>✅ 完成！</strong> 流程已結束。
+            </div>
+
+            <div class="d-flex flex-wrap gap-2 mb-3">
+              <button class="btn btn-success" id="sequence-start">開始</button>
+              <button class="btn btn-warning" id="sequence-pause">暫停</button>
+              <button class="btn btn-info" id="sequence-resume">續跑</button>
+              <button class="btn btn-secondary" id="sequence-reset">重設</button>
+              <button class="btn btn-outline-light" id="sequence-back">上一步</button>
+              <button class="btn btn-outline-light" id="sequence-skip">下一步</button>
+              <button class="btn btn-outline-info" id="sequence-edit-toggle">編輯</button>
+            </div>
+
+            <div class="sequence-overview">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="mb-0">步驟概覽</h5>
+                <button class="btn btn-sm btn-outline-light" id="toggle-overview">展開/收合</button>
+              </div>
+              <ol class="list-group list-group-numbered sequence-step-list mb-0" id="sequence-overview-list"></ol>
+            </div>
+          </div>
+        </div>
+        </div>
+
+        <div class="col-lg-5">
+          <div class="card bg-secondary text-light shadow-sm h-100">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="mb-0">流程編輯器</h5>
+                <span class="small text-muted">編輯前請先暫停計時。</span>
+              </div>
+
+              <div class="row g-2 mb-3">
+                <div class="col-sm-6">
+                  <label class="form-label small text-muted mb-1">名稱</label>
+                  <input type="text" class="form-control input-dark" id="sequence-name-input" placeholder="可留空">
+                </div>
+                <div class="col-sm-3">
+                  <label class="form-label small text-muted mb-1">循環次數</label>
+                  <input type="number" min="1" max="99" class="form-control input-dark" id="sequence-cycles">
+                </div>
+                <div class="col-sm-3">
+                  <label class="form-label small text-muted mb-1">結束行為</label>
+                  <select class="form-control input-dark" id="sequence-end-behavior">
+                    <option value="stop">停止</option>
+                    <option value="repeat_forever" disabled>無限循環（暫不提供）</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="row g-2 mb-3">
+                <div class="col-sm-6">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="sequence-auto-start" checked>
+                    <label class="form-check-label" for="sequence-auto-start">自動開始下一步</label>
+                  </div>
+                </div>
+                <div class="col-sm-6">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="sequence-auto-cycle" checked>
+                    <label class="form-check-label" for="sequence-auto-cycle">自動開始下一輪</label>
+                  </div>
+                </div>
+              </div>
+
+              <div class="d-flex flex-wrap gap-2 mb-3">
+                <button class="btn btn-outline-success btn-sm" data-template="pomodoro">套用番茄鐘模板</button>
+                <button class="btn btn-outline-success btn-sm" data-template="cooking">套用煮飯模板</button>
+              </div>
+
+              <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <h6 class="mb-0">步驟列表</h6>
+                  <button class="btn btn-sm btn-outline-light" id="sequence-add-step">新增步驟</button>
+                </div>
+                <div id="sequence-steps-container" class="step-editor-list"></div>
+              </div>
+
+              <div class="d-flex justify-content-end gap-2">
+                <button class="btn btn-secondary" id="sequence-cancel-edit">取消</button>
+                <button class="btn btn-primary" id="sequence-save">儲存</button>
+              </div>
+              <div class="text-warning small mt-2" id="sequence-errors"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script src="index.js"></script>
+</body>
+</html>
