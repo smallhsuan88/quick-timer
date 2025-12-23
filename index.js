@@ -12,18 +12,18 @@
 
   const SEQUENCE_TEMPLATES = {
     pomodoro: {
-      name: "Pomodoro",
+      name: "番茄鐘",
       cycles: 4,
       autoStartNext: true,
       autoStartNextCycle: true,
       endBehavior: "stop",
       steps: [
-        { label: "Work", durationSec: 25 * 60, type: "work" },
-        { label: "Rest", durationSec: 5 * 60, type: "rest" },
+        { label: "工作", durationSec: 25 * 60, type: "work" },
+        { label: "休息", durationSec: 5 * 60, type: "rest" },
       ],
     },
     cooking: {
-      name: "Cooking demo",
+      name: "煮飯示例",
       cycles: 1,
       autoStartNext: true,
       autoStartNextCycle: true,
@@ -38,7 +38,7 @@
 
   const DEFAULT_SEQUENCE_CONFIG = {
     name: "",
-    steps: [{ label: "Step 1", durationSec: 60, type: "generic" }],
+    steps: [{ label: "步驟 1", durationSec: 60, type: "generic" }],
     cycles: 1,
     autoStartNext: true,
     autoStartNextCycle: true,
@@ -318,10 +318,10 @@
 
   function updateSingleUI() {
     $("#single-display").text(formatTime(singleState.remainingSec));
-    let status = "Ready";
-    if (singleState.isRunning) status = "Running";
-    else if (singleState.isPaused) status = "Paused";
-    else if (singleState.remainingSec === 0) status = "Finished";
+    let status = "待機中";
+    if (singleState.isRunning) status = "執行中";
+    else if (singleState.isPaused) status = "已暫停";
+    else if (singleState.remainingSec === 0) status = "已完成";
     $("#single-status").text(status);
   }
 
@@ -367,32 +367,32 @@
     const row = $(`
       <div class="step-editor-row" data-index="${idx}">
         <div class="d-flex justify-content-between align-items-center mb-2">
-          <div class="step-badge">Step ${idx + 1}</div>
+          <div class="step-badge">步驟 ${idx + 1}</div>
           <div class="btn-group btn-group-sm">
-            <button class="btn btn-outline-light step-move-up" title="Move up">↑</button>
-            <button class="btn btn-outline-light step-move-down" title="Move down">↓</button>
-            <button class="btn btn-outline-danger step-delete" title="Delete">✕</button>
+            <button class="btn btn-outline-light step-move-up" title="上移">↑</button>
+            <button class="btn btn-outline-light step-move-down" title="下移">↓</button>
+            <button class="btn btn-outline-danger step-delete" title="刪除">✕</button>
           </div>
         </div>
         <div class="row g-2">
           <div class="col-sm-5">
-            <label class="form-label small text-muted mb-1">Label</label>
-            <input type="text" class="form-control form-control-sm step-label" value="${step.label || ""}" placeholder="Label (optional)">
+            <label class="form-label small text-muted mb-1">標籤</label>
+            <input type="text" class="form-control form-control-sm step-label" value="${step.label || ""}" placeholder="可留空">
           </div>
           <div class="col-sm-3">
-            <label class="form-label small text-muted mb-1">Minutes</label>
+            <label class="form-label small text-muted mb-1">分鐘</label>
             <input type="number" min="0" class="form-control form-control-sm step-min" value="${Math.floor(step.durationSec / 60)}">
           </div>
           <div class="col-sm-2">
-            <label class="form-label small text-muted mb-1">Seconds</label>
+            <label class="form-label small text-muted mb-1">秒數</label>
             <input type="number" min="0" max="59" class="form-control form-control-sm step-sec" value="${step.durationSec % 60}">
           </div>
           <div class="col-sm-2">
-            <label class="form-label small text-muted mb-1">Type</label>
+            <label class="form-label small text-muted mb-1">類型</label>
             <select class="form-select form-select-sm step-type">
-              <option value="generic" ${step.type === "generic" ? "selected" : ""}>Generic</option>
-              <option value="work" ${step.type === "work" ? "selected" : ""}>Work</option>
-              <option value="rest" ${step.type === "rest" ? "selected" : ""}>Rest</option>
+              <option value="generic" ${step.type === "generic" ? "selected" : ""}>一般</option>
+              <option value="work" ${step.type === "work" ? "selected" : ""}>工作</option>
+              <option value="rest" ${step.type === "rest" ? "selected" : ""}>休息</option>
             </select>
           </div>
         </div>
@@ -426,7 +426,7 @@
       $(this)
         .attr("data-index", idx)
         .find(".step-badge")
-        .text(`Step ${idx + 1}`);
+        .text(`步驟 ${idx + 1}`);
     });
   }
 
@@ -440,13 +440,13 @@
       const type = $(this).find(".step-type").val() || "generic";
       const durationSec = minutes * 60 + seconds;
       if (durationSec < 1) {
-        errors.push("Duration must be at least 1 second for all steps.");
+        errors.push("每個步驟時間至少 1 秒。");
       }
       steps.push({ label, durationSec, type });
     });
     const cycles = parseInt($("#sequence-cycles").val(), 10) || 1;
-    if (cycles < 1) errors.push("Cycles must be at least 1.");
-    if (steps.length === 0) errors.push("At least one step is required.");
+    if (cycles < 1) errors.push("循環次數至少為 1。");
+    if (steps.length === 0) errors.push("至少需要一個步驟。");
 
     const config = {
       name: $("#sequence-name-input").val() || "",
@@ -522,7 +522,7 @@
 
   function startSequenceTimer() {
     if (!validateSequenceConfig(sequenceState.config)) {
-      $("#sequence-errors").text("Invalid sequence configuration.");
+      $("#sequence-errors").text("流程設定無效，請檢查步驟與循環。");
       return;
     }
     if (sequenceState.runtime.completed) {
@@ -650,7 +650,7 @@
     const { config, runtime } = sequenceState;
     const step = config.steps[runtime.stepIndex] || { label: "", durationSec: 0 };
 
-    $("#sequence-name").text(config.name || "Untitled sequence");
+    $("#sequence-name").text(config.name || "未命名流程");
     $("#sequence-display").text(formatTime(runtime.remainingSec));
     const label = step.label?.trim() ? step.label : `步驟 ${runtime.stepIndex + 1}`;
     $("#sequence-step-label").text(label);
@@ -658,7 +658,7 @@
     $("#sequence-cycle-progress").text(`${runtime.cycleIndex + 1} / ${config.cycles}`);
 
     $("#sequence-mode-label")
-      .text(runtime.completed ? "Completed" : runtime.isRunning ? "Running" : runtime.isPaused ? "Paused" : "Ready")
+      .text(runtime.completed ? "已完成" : runtime.isRunning ? "執行中" : runtime.isPaused ? "已暫停" : "待機中")
       .toggleClass("bg-info", !runtime.completed)
       .toggleClass("bg-success", runtime.completed);
 
@@ -681,7 +681,7 @@
     sequenceState.config.steps.forEach((step, idx) => {
       const item = $(`
         <li class="list-group-item">
-          <span>${step.label?.trim() || `Step ${idx + 1}`}</span>
+          <span>${step.label?.trim() || `步驟 ${idx + 1}`}</span>
           <span class="duration">${formatTime(step.durationSec)}</span>
         </li>
       `);
